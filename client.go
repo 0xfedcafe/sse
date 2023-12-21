@@ -55,6 +55,7 @@ type Client struct {
 	mu                sync.Mutex
 	EncodingBase64    bool
 	Connected         bool
+	ShouldRun         bool
 }
 
 // NewClient creates a new client
@@ -100,7 +101,7 @@ func (c *Client) SubscribeWithContext(ctx context.Context, stream string, handle
 		reader := NewEventStreamReader(resp.Body, c.maxBufferSize)
 		eventChan, errorChan := c.startReadLoop(reader)
 
-		for {
+		for c.ShouldRun {
 			select {
 			case err = <-errorChan:
 				return err
@@ -108,6 +109,7 @@ func (c *Client) SubscribeWithContext(ctx context.Context, stream string, handle
 				handler(msg)
 			}
 		}
+		return nil
 	}
 
 	// Apply user specified reconnection strategy or default to standard NewExponentialBackOff() reconnection method
@@ -158,7 +160,7 @@ func (c *Client) SubscribeChanWithContext(ctx context.Context, stream string, ch
 		reader := NewEventStreamReader(resp.Body, c.maxBufferSize)
 		eventChan, errorChan := c.startReadLoop(reader)
 
-		for {
+		for c.ShouldRun {
 			var msg *Event
 			// Wait for message to arrive or exit
 			select {
@@ -179,6 +181,7 @@ func (c *Client) SubscribeChanWithContext(ctx context.Context, stream string, ch
 				}
 			}
 		}
+		return nil
 	}
 
 	go func() {
@@ -209,7 +212,7 @@ func (c *Client) startReadLoop(reader *EventStreamReader) (chan *Event, chan err
 }
 
 func (c *Client) readLoop(reader *EventStreamReader, outCh chan *Event, erChan chan error) {
-	for {
+	for c.ShouldRun {
 		// Read each new line and process the type of event
 		event, err := reader.ReadEvent()
 		if err != nil {
@@ -281,6 +284,10 @@ func (c *Client) Unsubscribe(ch chan *Event) {
 // OnDisconnect specifies the function to run when the connection disconnects
 func (c *Client) OnDisconnect(fn ConnCallback) {
 	c.disconnectcb = fn
+}
+
+func (c *Client) Close() {
+
 }
 
 // OnConnect specifies the function to run when the connection is successful
