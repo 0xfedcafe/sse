@@ -66,6 +66,7 @@ func NewClient(url string, opts ...func(c *Client)) *Client {
 		Headers:       make(map[string]string),
 		subscribed:    make(map[chan *Event]chan struct{}),
 		maxBufferSize: 1 << 16,
+		ShouldRun:     true,
 	}
 
 	for _, opt := range opts {
@@ -287,7 +288,7 @@ func (c *Client) OnDisconnect(fn ConnCallback) {
 }
 
 func (c *Client) Close() {
-
+	c.ShouldRun = false
 }
 
 // OnConnect specifies the function to run when the connection is successful
