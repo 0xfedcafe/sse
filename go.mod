@@ -1,4 +1,4 @@
-module github.com/0xfedcafe/sse/v2
+module github.com/0xfedcafe/sse
 
 go 1.13
 
