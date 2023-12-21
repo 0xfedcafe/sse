@@ -130,7 +130,7 @@ func (c *Client) SubscribeChan(stream string, ch chan *Event) error {
 
 // SubscribeChanWithContext sends all events to the provided channel with context
 func (c *Client) SubscribeChanWithContext(ctx context.Context, stream string, ch chan *Event) error {
-	var connected bool
+	connected := false
 	errch := make(chan error)
 	c.mu.Lock()
 	c.subscribed[ch] = make(chan struct{})
